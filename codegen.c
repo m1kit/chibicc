@@ -140,10 +140,18 @@ static void gen_addr(Node *node) {
 
     // Function
     if (node->ty->kind == TY_FUNC) {
+      char* name = node->var->name;
+#ifdef CHIBICC_ASAN_SUPPORT
+      if (!strcmp(name, "malloc")) {
+        name = "chibicc_asan_malloc";
+      } else if (!strcmp(name, "free")) {
+        name = "chibicc_asan_free";
+      }
+#endif // CHIBICC_ASAN_SUPPORT
       if (node->var->is_definition)
-        println("  lea %s(%%rip), %%rax", node->var->name);
+        println("  lea %s(%%rip), %%rax", name);
       else
-        println("  mov %s@GOTPCREL(%%rip), %%rax", node->var->name);
+        println("  mov %s@GOTPCREL(%%rip), %%rax", name);
       return;
     }
 

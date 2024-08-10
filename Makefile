@@ -1,4 +1,4 @@
-CFLAGS=-std=c11 -g -fno-common -Wall -Wno-switch
+CFLAGS=-std=c11 -g -fno-common -Wall -Wno-switch -DCHIBICC_ASAN_SUPPORT
 
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o)
@@ -10,6 +10,9 @@ TESTS=$(TEST_SRCS:.c=.exe)
 
 chibicc: $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+compiler_rt/libchibicc.o: compiler_rt/libchibicc.c
+	$(CC) $(CFLAGS) -c -o $@ $^
 
 $(OBJS): chibicc.h
 
