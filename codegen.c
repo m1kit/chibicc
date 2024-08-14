@@ -148,6 +148,13 @@ static void gen_addr(Node *node) {
         name = "chibicc_asan_free";
       }
 #endif // CHIBICC_ASAN_SUPPORT
+#ifdef CHIBICC_TSAN_SUPPORT
+      if (!strcmp(name, "pthread_mutex_lock")) {
+        name = "chibicc_tsan_pthread_mutex_lock";
+      } else if (!strcmp(name, "pthread_mutex_unlock")) {
+        name = "chibicc_tsan_pthread_mutex_unlock";
+      }
+#endif // CHIBICC_TSAN_SUPPORT
       if (node->var->is_definition)
         println("  lea %s(%%rip), %%rax", name);
       else
@@ -216,6 +223,21 @@ static void load(Type *ty) {
     return;
   }
 
+#ifdef CHIBICC_TSAN_SUPPORT
+  push();
+  if (depth % 2 == 1) {
+    println("  sub $8, %%rsp");
+  }
+  println("  mov %%rax, %%rdi");
+  println("  mov $0, %%rax");
+  println("  mov chibicc_tsan_read@GOTPCREL(%%rip), %%r10");
+  println("  call *%%r10");
+  if (depth % 2 == 1) {
+    println("  add $8, %%rsp");
+  }
+  pop("%rax");
+#endif // CHIBICC_TSAN_SUPPORT
+
   char *insn = ty->is_unsigned ? "movz" : "movs";
 
   // When we load a char or a short value to a register, we always
@@ -255,6 +277,23 @@ static void store(Type *ty) {
     println("  fstpt (%%rdi)");
     return;
   }
+
+#ifdef CHIBICC_TSAN_SUPPORT
+  push();
+  println("  push %%rdi");
+  depth++;
+  if (depth % 2 == 1) {
+    println("  sub $8, %%rsp");
+  }
+  println("  mov $0, %%rax");
+  println("  mov chibicc_tsan_write@GOTPCREL(%%rip), %%r10");
+  println("  call *%%r10");
+  if (depth % 2 == 1) {
+    println("  add $8, %%rsp");
+  }
+  pop("%rdi");
+  pop("%rax");
+#endif // CHIBICC_TSAN_SUPPORT
 
   if (ty->size == 1)
     println("  mov %%al, (%%rdi)");

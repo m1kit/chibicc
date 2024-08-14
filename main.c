@@ -633,9 +633,9 @@ static void run_linker(StringArray *inputs, char *output) {
     strarray_push(&arr, format("%s/crtbegin.o", gcc_libpath));
   }
 
-#ifdef CHIBICC_ASAN_SUPPORT
+#if defined(CHIBICC_ASAN_SUPPORT) || defined(CHIBICC_TSAN_SUPPORT)
   strarray_push(&arr, "compiler_rt/libchibicc.o");
-#endif // CHIBICC_ASAN_SUPPORT
+#endif // defined(CHIBICC_ASAN_SUPPORT) || defined(CHIBICC_TSAN_SUPPORT)
 
   strarray_push(&arr, format("-L%s", gcc_libpath));
   strarray_push(&arr, "-L/usr/lib/x86_64-linux-gnu");
